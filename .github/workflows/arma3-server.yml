@@ -1,0 +1,32 @@
+name: Run Arma 3 Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SteamCMD
+      run: |
+        Invoke-WebRequest -Uri "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip" -OutFile "steamcmd.zip"
+        Expand-Archive steamcmd.zip -DestinationPath $env:LOCALAPPDATA\Steam
+        $env:PATH += ";$env:LOCALAPPDATA\Steam\steamcmd"
+
+    - name: Install Arma 3 Server
+      run: |
+        mkdir -p $env:LOCALAPPDATA\arma3
+        steamcmd +login anonymous +force_install_dir $env:LOCALAPPDATA\arma3 +app_update 233780 validate +quit
+
+    - name: Run Arma 3 Server
+      run: |
+        cd $env:LOCALAPPDATA\arma3
+        Start-Process -NoNewWindow -FilePath "arma3server.exe" -ArgumentList "-config=server.cfg -port=2302"
+      # Adjust the command and arguments according to your server requirements
